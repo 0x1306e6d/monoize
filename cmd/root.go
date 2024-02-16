@@ -23,7 +23,7 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		sources := args[:len(args)-1]
-		// target := args[len(args)-1]
+		target := args[len(args)-1]
 
 		for _, source := range sources {
 			u, err := url.Parse(source)
@@ -33,6 +33,14 @@ var rootCmd = &cobra.Command{
 			if u.Scheme != "http" && u.Scheme != "https" {
 				return fmt.Errorf("`http` and `https` protocols are supported")
 			}
+		}
+
+		err := os.Mkdir(target, os.ModePerm)
+		if err != nil {
+			if os.IsExist(err) {
+				return fmt.Errorf("`%s` already exists", target)
+			}
+			return err
 		}
 
 		for _, source := range sources {
