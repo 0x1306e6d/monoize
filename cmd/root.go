@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/go-git/go-git/v5"
@@ -20,9 +21,19 @@ var rootCmd = &cobra.Command{
 	Use:   "monoize [source repository] [target repository]",
 	Short: "monoize makes your git repositories monorepo",
 	Args:  cobra.MinimumNArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		sources := args[:len(args)-1]
 		// target := args[len(args)-1]
+
+		for _, source := range sources {
+			u, err := url.Parse(source)
+			if err != nil {
+				return fmt.Errorf("`http` and `https` protocols are supported")
+			}
+			if u.Scheme != "http" && u.Scheme != "https" {
+				return fmt.Errorf("`http` and `https` protocols are supported")
+			}
+		}
 
 		for _, source := range sources {
 			repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
@@ -52,6 +63,8 @@ var rootCmd = &cobra.Command{
 				return nil
 			})
 		}
+
+		return nil
 	},
 }
 
