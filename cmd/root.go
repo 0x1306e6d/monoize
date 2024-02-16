@@ -43,19 +43,19 @@ var rootCmd = &cobra.Command{
 				URL: source,
 			})
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			ref, err := repo.Head()
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			fmt.Println(ref)
 
 			cIter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			cIter.ForEach(func(c *object.Commit) error {
