@@ -17,6 +17,7 @@ import (
 var (
 	username string
 	password string
+	force    bool
 )
 
 var rootCmd = &cobra.Command{
@@ -37,6 +38,12 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
+		if force {
+			err := os.RemoveAll(target)
+			if err != nil {
+				return err
+			}
+		}
 		err := os.Mkdir(target, os.ModePerm)
 		if err != nil {
 			if os.IsExist(err) {
@@ -83,6 +90,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.Flags().StringVarP(&username, "username", "u", "", "username for auth")
 	rootCmd.Flags().StringVarP(&password, "password", "p", "", "password for auth")
+	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "force to overwrite the target directory")
 }
 
 func Execute() {
