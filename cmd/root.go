@@ -5,7 +5,10 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"os/exec"
+	"path"
 	"sort"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -28,16 +31,6 @@ var rootCmd = &cobra.Command{
 		sources := args[:len(args)-1]
 		target := args[len(args)-1]
 
-		for _, source := range sources {
-			u, err := url.Parse(source)
-			if err != nil {
-				return fmt.Errorf("`http` and `https` protocols are supported")
-			}
-			if u.Scheme != "http" && u.Scheme != "https" {
-				return fmt.Errorf("`http` and `https` protocols are supported")
-			}
-		}
-
 		if force {
 			err := os.RemoveAll(target)
 			if err != nil {
@@ -50,6 +43,35 @@ var rootCmd = &cobra.Command{
 				return fmt.Errorf("`%s` already exists", target)
 			}
 			return err
+		}
+
+		for _, source := range sources {
+			u, err := url.Parse(source)
+			if err != nil {
+				return fmt.Errorf("`http` and `https` protocols are supported")
+			}
+			if u.Scheme != "http" && u.Scheme != "https" {
+				return fmt.Errorf("`http` and `https` protocols are supported")
+			}
+
+			b := path.Base(u.Path)
+			name := strings.TrimSuffix(b, ".git")
+
+			cmd := exec.Command("git", "clone", source, fmt.Sprintf(".repo/%s", name))
+			cmd.Dir = target
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				return err
+			}
+
+			cmd = exec.Command("git", "format-patch", "--root", "-o", fmt.Sprintf("../../.patch/%s", name))
+			cmd.Dir = fmt.Sprintf("%s/.repo/%s", target, name)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				return err
+			}
 		}
 
 		commits := []commitSrc{}
