@@ -104,6 +104,16 @@ var rootCmd = &cobra.Command{
 			fmt.Printf("%+v\n", p)
 		}
 
+		p := filepath.Join(target, ".repo")
+		if err := os.RemoveAll(p); err != nil {
+			return err
+		}
+
+		p = filepath.Join(target, ".patch")
+		if err := os.RemoveAll(p); err != nil {
+			return err
+		}
+
 		return nil
 	},
 }
