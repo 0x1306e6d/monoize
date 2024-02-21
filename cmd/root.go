@@ -52,7 +52,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		commits := map[string][]object.Commit{}
+		commits := []commitSrc{}
 		for _, src := range sources {
 			repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				Auth: &http.BasicAuth{
@@ -69,18 +69,19 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 
-			cs := []object.Commit{}
 			for {
 				c, err := cIter.Next()
 				if err == io.EOF {
 					break
 				}
-				cs = append(cs, *c)
+				commits = append(commits, commitSrc{src, *c})
 			}
+		}
 
-			sort.Sort(byCTime(cs))
+		sort.Sort(byCTime(commits))
 
-			commits[src] = cs
+		for _, c := range commits {
+			fmt.Printf("%s: [%s] %s\n", c.src, &c.commit.Committer.When, c.commit.Message)
 		}
 
 		return nil
@@ -100,8 +101,19 @@ func Execute() {
 	}
 }
 
-type byCTime []object.Commit
+type commitSrc struct {
+	src    string
+	commit object.Commit
+}
 
-func (c byCTime) Len() int           { return len(c) }
-func (c byCTime) Less(i, j int) bool { return c[i].Committer.When.Before(c[j].Committer.When) }
-func (c byCTime) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c commitSrc) String() string {
+	return fmt.Sprintf("%s: %s", c.src, c.commit.Hash)
+}
+
+type byCTime []commitSrc
+
+func (c byCTime) Len() int { return len(c) }
+func (c byCTime) Less(i, j int) bool {
+	return c[i].commit.Committer.When.Before(c[j].commit.Committer.When)
+}
+func (c byCTime) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
