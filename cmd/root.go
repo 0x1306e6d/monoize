@@ -106,7 +106,10 @@ var rootCmd = &cobra.Command{
 		sort.Sort(byPatchDate(patches))
 
 		for _, p := range patches {
-			git.Am(target, p.path, p.directory)
+			err = git.Am(target, p.path, p.directory)
+			if err != nil {
+				return err
+			}
 			fmt.Printf("[%s] Applying %s to %s\n", p.patch.Date, p.patch.Subject, p.directory)
 		}
 
