@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/0x1306e6d/monoize/pkg/git"
@@ -40,6 +42,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
+		patches := []patchFile{}
 		for _, source := range sources {
 			u, err := url.Parse(source)
 			if err != nil {
@@ -71,17 +74,46 @@ var rootCmd = &cobra.Command{
 				if err != nil {
 					return err
 				}
+
 				p, err := git.ParsePatch(string(d))
 				if err != nil {
 					return err
 				}
-				fmt.Printf("p: %+v\n", p)
+
+				path := filepath.Join(target, ".patch", name, e.Name())
+				path, err = filepath.Abs(path)
+				if err != nil {
+					return nil
+				}
+
+				pf := patchFile{
+					Path:  path,
+					Patch: p,
+				}
+				patches = append(patches, pf)
 			}
+		}
+
+		sort.Sort(byPatchDate(patches))
+
+		for _, p := range patches {
+			fmt.Printf("%+v\n", p)
 		}
 
 		return nil
 	},
 }
+
+type patchFile struct {
+	Path  string
+	Patch git.Patch
+}
+
+type byPatchDate []patchFile
+
+func (b byPatchDate) Len() int           { return len(b) }
+func (b byPatchDate) Less(i, j int) bool { return b[i].Patch.Date.Before(b[j].Patch.Date) }
+func (b byPatchDate) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
 
 func init() {
 	rootCmd.Flags().StringVarP(&username, "username", "u", "", "username for auth")
