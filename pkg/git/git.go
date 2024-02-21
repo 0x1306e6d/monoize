@@ -33,6 +33,14 @@ func FormatPatch(repo string, output string) error {
 	return cmd.Run()
 }
 
+func Am(repo string, patch string, dir string) error {
+	cmd := exec.Command("git", "am", patch, fmt.Sprintf("--directory=%s", dir))
+	cmd.Dir = repo
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 var layout = "Mon, 2 Jan 2006 15:04:05 -0700"
 
 func ParsePatch(p string) (Patch, error) {

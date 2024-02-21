@@ -91,8 +91,9 @@ var rootCmd = &cobra.Command{
 				}
 
 				pf := patchFile{
-					Path:  path,
-					Patch: p,
+					Repository: name,
+					Path:       path,
+					Patch:      p,
 				}
 				patches = append(patches, pf)
 			}
@@ -101,7 +102,8 @@ var rootCmd = &cobra.Command{
 		sort.Sort(byPatchDate(patches))
 
 		for _, p := range patches {
-			fmt.Printf("%+v\n", p)
+			git.Am(target, p.Path, p.Repository)
+			fmt.Printf("[%s] Applying %s to %s\n", p.Patch.Date, p.Patch.Subject, p.Repository)
 		}
 
 		p := filepath.Join(target, ".repo")
@@ -119,8 +121,9 @@ var rootCmd = &cobra.Command{
 }
 
 type patchFile struct {
-	Path  string
-	Patch git.Patch
+	Repository string
+	Path       string
+	Patch      git.Patch
 }
 
 type byPatchDate []patchFile
