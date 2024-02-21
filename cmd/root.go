@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/0x1306e6d/monoize/pkg/git"
 	"github.com/spf13/cobra"
 )
 
@@ -51,15 +52,11 @@ var rootCmd = &cobra.Command{
 			b := path.Base(u.Path)
 			name := strings.TrimSuffix(b, ".git")
 
-			cmd := exec.Command("git", "clone", source, fmt.Sprintf(".repo/%s", name))
-			cmd.Dir = target
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
+			if err := git.Clone(target, source, fmt.Sprintf(".repo/%s", name)); err != nil {
 				return err
 			}
 
-			cmd = exec.Command("git", "format-patch", "--root", "-o", fmt.Sprintf("../../.patch/%s", name))
+			cmd := exec.Command("git", "format-patch", "--root", "-o", fmt.Sprintf("../../.patch/%s", name))
 			cmd.Dir = fmt.Sprintf("%s/.repo/%s", target, name)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
