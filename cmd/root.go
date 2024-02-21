@@ -36,14 +36,15 @@ var rootCmd = &cobra.Command{
 		}
 		err := os.Mkdir(target, os.ModePerm)
 		if err != nil {
-			if os.IsExist(err) {
-				return fmt.Errorf("`%s` already exists", target)
+			if !os.IsExist(err) {
+				return err
 			}
-			return err
 		}
 
-		if err := git.Init(target); err != nil {
-			return err
+		if !exists(fmt.Sprintf("%s/.git", target)) {
+			if err := git.Init(target); err != nil {
+				return err
+			}
 		}
 
 		patches := []patchFile{}
@@ -143,4 +144,9 @@ func Execute() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func exists(name string) bool {
+	_, err := os.Stat(name)
+	return os.IsExist(err)
 }
