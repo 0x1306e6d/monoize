@@ -95,9 +95,9 @@ var rootCmd = &cobra.Command{
 				}
 
 				pf := patchFile{
-					directory: targetDir,
-					path:      path,
 					patch:     p,
+					path:      path,
+					targetDir: targetDir,
 				}
 				patches = append(patches, pf)
 			}
@@ -106,11 +106,11 @@ var rootCmd = &cobra.Command{
 		sort.Sort(byPatchDate(patches))
 
 		for _, p := range patches {
-			err = git.Am(target, p.path, p.directory)
+			err = git.Am(target, p.path, p.targetDir)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("[%s] Applying %s to %s\n", p.patch.Date, p.patch.Subject, p.directory)
+			fmt.Printf("[%s] Applying %s to %s\n", p.patch.Date, p.patch.Subject, p.targetDir)
 		}
 
 		p := filepath.Join(target, ".repo")
@@ -153,16 +153,22 @@ func parseSrcRepo(src string) (string, string, string, error) {
 }
 
 type patchFile struct {
-	directory string
-	path      string
 	patch     git.Patch
+	path      string
+	targetDir string
 }
 
 type byPatchDate []patchFile
 
-func (b byPatchDate) Len() int           { return len(b) }
-func (b byPatchDate) Less(i, j int) bool { return b[i].patch.Date.Before(b[j].patch.Date) }
-func (b byPatchDate) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+func (b byPatchDate) Len() int { return len(b) }
+func (b byPatchDate) Less(i, j int) bool {
+	b1, b2 := b[i], b[j]
+	if b1.patch.Date.Equal(b2.patch.Date) {
+		return path.Base(b1.path) < path.Base(b2.path)
+	}
+	return b1.patch.Date.Before(b2.patch.Date)
+}
+func (b byPatchDate) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
 func exists(name string) bool {
 	_, err := os.Stat(name)
