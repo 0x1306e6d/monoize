@@ -14,9 +14,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
 var (
 	force bool
 )
+
+func init() {
+	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "force to overwrite the target directory")
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "monoize [source repository] [target repository]",
@@ -130,17 +141,6 @@ type byPatchDate []patchFile
 func (b byPatchDate) Len() int           { return len(b) }
 func (b byPatchDate) Less(i, j int) bool { return b[i].Patch.Date.Before(b[j].Patch.Date) }
 func (b byPatchDate) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-
-func init() {
-	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "force to overwrite the target directory")
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
 
 func exists(name string) bool {
 	_, err := os.Stat(name)
