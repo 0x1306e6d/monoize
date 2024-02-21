@@ -42,6 +42,10 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
+		if err := git.Init(target); err != nil {
+			return err
+		}
+
 		patches := []patchFile{}
 		for _, source := range sources {
 			u, err := url.Parse(source)
