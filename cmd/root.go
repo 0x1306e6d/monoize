@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 
@@ -56,11 +55,7 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 
-			cmd := exec.Command("git", "format-patch", "--root", "-o", fmt.Sprintf("../../.patch/%s", name))
-			cmd.Dir = fmt.Sprintf("%s/.repo/%s", target, name)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
+			if err := git.FormatPatch(fmt.Sprintf("%s/.repo/%s", target, name), fmt.Sprintf("../../.patch/%s", name)); err != nil {
 				return err
 			}
 		}
