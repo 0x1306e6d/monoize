@@ -34,7 +34,7 @@ func FormatPatch(repo string, output string) error {
 }
 
 func Am(repo string, patch string, dir string) error {
-	cmd := exec.Command("git", "am", patch, fmt.Sprintf("--directory=%s", dir))
+	cmd := exec.Command("git", "am", patch, fmt.Sprintf("--directory=%s", dir), "--committer-date-is-author-date")
 	cmd.Dir = repo
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
