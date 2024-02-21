@@ -46,6 +46,12 @@ place the files of the `monoize` repository in the `tools/mono` directory.
 
 Deletes the target directory before merging.
 
+## How it works
+
+`monoize` uses `git format-patch` to export the commits of the source
+repositories. And it sorts all patches by the author date and applies them to
+the target repository by `git am`.
+
 ## License
 
 ```
