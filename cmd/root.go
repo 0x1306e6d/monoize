@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path"
@@ -57,6 +58,24 @@ var rootCmd = &cobra.Command{
 
 			if err := git.FormatPatch(fmt.Sprintf("%s/.repo/%s", target, name), fmt.Sprintf("../../.patch/%s", name)); err != nil {
 				return err
+			}
+
+			dir := os.DirFS(fmt.Sprintf("%s/.patch/%s", target, name))
+			entries, err := fs.ReadDir(dir, ".")
+			if err != nil {
+				return err
+			}
+
+			for _, e := range entries {
+				d, err := fs.ReadFile(dir, e.Name())
+				if err != nil {
+					return err
+				}
+				p, err := git.ParsePatch(string(d))
+				if err != nil {
+					return err
+				}
+				fmt.Printf("p: %+v\n", p)
 			}
 		}
 
