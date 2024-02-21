@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"net/url"
 	"os"
+	"sort"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -43,33 +45,35 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		for _, source := range sources {
+		commits := map[string][]object.Commit{}
+		for _, src := range sources {
 			repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				Auth: &http.BasicAuth{
 					Username: username, Password: password,
 				},
-				URL: source,
+				URL: src,
 			})
 			if err != nil {
 				return err
 			}
 
-			ref, err := repo.Head()
+			cIter, err := repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime, All: true})
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(ref)
-
-			cIter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
-			if err != nil {
-				return err
+			cs := []object.Commit{}
+			for {
+				c, err := cIter.Next()
+				if err == io.EOF {
+					break
+				}
+				cs = append(cs, *c)
 			}
 
-			cIter.ForEach(func(c *object.Commit) error {
-				fmt.Println(c)
-				return nil
-			})
+			sort.Sort(byCTime(cs))
+
+			commits[src] = cs
 		}
 
 		return nil
@@ -87,3 +91,9 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+
+type byCTime []object.Commit
+
+func (c byCTime) Len() int           { return len(c) }
+func (c byCTime) Less(i, j int) bool { return c[i].Committer.When.Before(c[j].Committer.When) }
+func (c byCTime) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
