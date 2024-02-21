@@ -15,9 +15,7 @@ import (
 )
 
 var (
-	username string
-	password string
-	force    bool
+	force bool
 )
 
 var rootCmd = &cobra.Command{
@@ -134,8 +132,6 @@ func (b byPatchDate) Less(i, j int) bool { return b[i].Patch.Date.Before(b[j].Pa
 func (b byPatchDate) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
 
 func init() {
-	rootCmd.Flags().StringVarP(&username, "username", "u", "", "username for auth")
-	rootCmd.Flags().StringVarP(&password, "password", "p", "", "password for auth")
 	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "force to overwrite the target directory")
 }
 
